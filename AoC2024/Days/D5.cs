@@ -1,148 +1,180 @@
-﻿namespace AoC2024.Days;
+﻿using AoC2024.Core;
+using System.Data;
+
+namespace AoC2024.Days;
 
 internal class D5
 {
+    //Access
+    List<List<int>> pageOrderingRules = [];
+    List<List<int>> pageUpdatesNumbers = [];
+
     internal void Execute()
     {
         string inputFilePath = Path.Combine(AppContext.BaseDirectory, @"Inputs\D5.txt");
 
-        string example = @"
-47|53
-97|13
-97|61
-97|47
-75|29
-61|13
-75|53
-29|13
-97|29
-53|29
-61|53
-97|53
-61|29
-47|13
-75|47
-97|75
-47|61
-75|61
-47|29
-75|13
-53|13
-
-75,47,61,53,29
-97,61,53,29,13
-75,29,13
-75,97,47,61,53
-61,13,29
-97,13,75,29,47
-";
-
         string input = File.ReadAllText(inputFilePath);
-        //string input = example;
 
         var inputParts = input.Split("\n\n");
-        //var inputParts = input.Split("\r\n\r\n");
 
-        var pagesOrderingRules = inputParts[0]
-            //.Split("\r\n")
+        pageOrderingRules = inputParts[0]
             .Split("\n")
             .Where(x => !string.IsNullOrEmpty(x))
-            .ToList();
-
-        var pagesToUpdate = inputParts[1]
-            //.Split("\r\n")
+            .ToList()
+            .ConvertAll(x => x.Split("|").Select(int.Parse)
+            .ToList())
+;
+        pageUpdatesNumbers = inputParts[1]
             .Split("\n")
             .Where(x => !string.IsNullOrEmpty(x))
-            .ToList();
+            .ToList()
+            .ConvertAll(x => x.Split(",").Select(int.Parse)
+            .ToList());
 
-        Dictionary<int, List<int>> beforePageOrderingRulesDictionary = new();
-        Dictionary<int, List<int>> afterPageOrderingRulesDictionary = new();
+        PerformPuzzle(PuzzlePart.One);
+        PerformPuzzle(PuzzlePart.Two);
+    }
 
-        foreach (var rule in pagesOrderingRules)
+    private void PerformPuzzle(PuzzlePart part)
+    {
+        int result = 0;
+
+        foreach (var pagesUpdateNumbers in pageUpdatesNumbers)
         {
-            var ruleValues = rule.Split("|").Select(int.Parse).ToList();
+            List<List<int>> applicableRules =
+                pageOrderingRules
+                .Where(x => x.All(pagesUpdateNumbers.Contains))
+                .ToList();
 
-            var numberBefore = ruleValues[0];
-            var numberAfter = ruleValues[1];
-
-            if (beforePageOrderingRulesDictionary.TryGetValue(numberAfter, out List<int>? valuesBefore))
+            if (part == PuzzlePart.One)
             {
-                valuesBefore.Add(numberBefore);
-            }
-            else
-            {
-                beforePageOrderingRulesDictionary.Add(numberAfter, new() { numberBefore });
+                if (applicableRules.All(x => RespectsRule(pagesUpdateNumbers, x)))
+                {
+                    result += pagesUpdateNumbers[pagesUpdateNumbers.Count / 2];
+                }
             }
 
-            if (afterPageOrderingRulesDictionary.TryGetValue(numberBefore, out List<int>? valuesAfter))
+            if (part == PuzzlePart.Two)
             {
-                valuesAfter.Add(numberAfter);
-            }
-            else
-            {
-                afterPageOrderingRulesDictionary.Add(numberBefore, new() { numberAfter });
+                if (!applicableRules.All(x => RespectsRule(pagesUpdateNumbers, x)))
+                {
+                    CorrectRules(pagesUpdateNumbers, applicableRules);
+
+                    result += pagesUpdateNumbers[pagesUpdateNumbers.Count / 2];
+                }
             }
         }
 
-        List<int[]> validPagesUpdates = new();
+        Console.WriteLine($"Day 5 Part {part}: {result}");
+    }
 
-        bool rowValid = true;
-
-        foreach (var pagesRow in pagesToUpdate)
+    private static bool RespectsRule(List<int> pageUpdateNumbers, List<int> applicableRules)
+    {
+        if (applicableRules.Count < 1)
         {
-            var pagesRowArray = pagesRow.Split(",").Select(int.Parse).ToArray();
+            return true;
+        }
 
-            int rangeToIndex = 1;
-            foreach (var pageRow in pagesRowArray)
+        int lastIndex = pageUpdateNumbers.IndexOf(applicableRules[0]);
+
+        if (lastIndex < 0)
+        {
+            return true;
+        }
+
+        for (int i = 1; i < applicableRules.Count; ++i)
+        {
+            int index = pageUpdateNumbers.IndexOf(applicableRules[i]);
+
+            if (index < 0)
             {
-                var pageRowArraySliceBeforeCurrentValue = pagesRowArray[0..rangeToIndex];
-                var pageRowArraySliceAfterCurrentValue =
-                    pagesRowArray[(rangeToIndex - 1)..pagesRowArray.Length];
+                return true;
+            }
 
-                if (beforePageOrderingRulesDictionary.TryGetValue(pageRow, out List<int>? pageRulesBefore))
+            if (index < lastIndex)
+            {
+                return false;
+            }
+
+            lastIndex = index;
+        }
+
+        return true;
+    }
+
+    private static int CorrectRule(List<int> pageUpdateNumbers, List<int> applicableRules)
+    {
+        if (applicableRules.Count < 1)
+        {
+            return 0;
+        }
+
+        bool hasCorrected = true;
+
+        int corrected = 0;
+
+        while (hasCorrected)
+        {
+            hasCorrected = false;
+
+            int lastIndex = pageUpdateNumbers.IndexOf(applicableRules[0]);
+
+            if (lastIndex < 0)
+            {
+                return 0;
+            }
+
+            for (int i = 0; i < applicableRules.Count; i++)
+            {
+                int index = pageUpdateNumbers.IndexOf(applicableRules[i]);
+
+                if (index < 0)
                 {
-                    foreach (var pageRule in pageRulesBefore)
-                    {
-                        if (pagesRowArray.Contains(pageRule)
-                            && !pageRowArraySliceBeforeCurrentValue.Contains(pageRule))
-                        {
-                            rowValid = false;
-                        }
-                    }
+                    return 0;
                 }
 
-                if (afterPageOrderingRulesDictionary.TryGetValue(pageRow, out List<int>? pageRulesAfter))
+                if (index < lastIndex)
                 {
-                    foreach (var pageRule in pageRulesAfter)
-                    {
-                        if (pagesRowArray.Contains(pageRule)
-                            && !pageRowArraySliceAfterCurrentValue.Contains(pageRule))
-                        {
-                            rowValid = false;
-                        }
-                    }
+                    (pageUpdateNumbers[index], pageUpdateNumbers[lastIndex])
+                        = (pageUpdateNumbers[lastIndex], pageUpdateNumbers[index]);
+
+                    hasCorrected = true;
+                    corrected++;
+
+                    break;
                 }
 
-                rangeToIndex++;
-            }
-
-            if (rowValid)
-            {
-                validPagesUpdates.Add(pagesRowArray);
+                lastIndex = index;
             }
         }
 
-        var partOneResult = 0;
+        return corrected;
+    }
 
-        foreach (var validRow in validPagesUpdates)
+    private static int CorrectRules(List<int> pageUpdateNumbers, List<List<int>> applicableRules)
+    {
+        bool hasCorrected = true;
+
+        int correctedCounter = 0;
+
+        while (hasCorrected)
         {
-            partOneResult += validRow[validRow.Length / 2];
+            hasCorrected = false;
+
+            foreach (List<int> applicableRule in applicableRules)
+            {
+                int temporary = CorrectRule(pageUpdateNumbers, applicableRule);
+
+                if (temporary > 0)
+                {
+                    correctedCounter += temporary;
+                    hasCorrected = true;
+
+                    break;
+                }
+            }
         }
 
-        var partTwoResult = 0;
-
-        Console.WriteLine($"Day 5 Part 1: {partOneResult}");
-
-        Console.WriteLine($"Day 5 Part 2: {partTwoResult}");
+        return correctedCounter;
     }
 }
