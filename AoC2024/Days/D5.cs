@@ -60,7 +60,7 @@ internal class D5
 
         foreach (var rule in pagesOrderingRules)
         {
-            var ruleValues = rule.Split("|").Select(x => int.Parse(x)).ToList();
+            var ruleValues = rule.Split("|").Select(int.Parse).ToList();
 
             var numberBefore = ruleValues[0];
             var numberAfter = ruleValues[1];
