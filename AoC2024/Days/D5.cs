@@ -37,21 +37,21 @@ internal class D5
 97,13,75,29,47
 ";
 
-        //string input = File.ReadAllText(inputFilePath);
-        string input = example;
+        string input = File.ReadAllText(inputFilePath);
+        //string input = example;
 
-        //var inputParts = input.Split("\n\n");
-        var inputParts = input.Split("\r\n\r\n");
+        var inputParts = input.Split("\n\n");
+        //var inputParts = input.Split("\r\n\r\n");
 
         var pagesOrderingRules = inputParts[0]
-            .Split("\r\n")
-            //.Split("\n")
+            //.Split("\r\n")
+            .Split("\n")
             .Where(x => !string.IsNullOrEmpty(x))
             .ToList();
 
         var pagesToUpdate = inputParts[1]
-            .Split("\r\n")
-            //.Split("\n")
+            //.Split("\r\n")
+            .Split("\n")
             .Where(x => !string.IsNullOrEmpty(x))
             .ToList();
 
@@ -141,8 +141,8 @@ internal class D5
 
         var partTwoResult = 0;
 
-        Console.WriteLine($"Day 4 Part 1: {partOneResult}");
+        Console.WriteLine($"Day 5 Part 1: {partOneResult}");
 
-        Console.WriteLine($"Day 4 Part 2: {partTwoResult}");
+        Console.WriteLine($"Day 5 Part 2: {partTwoResult}");
     }
 }
