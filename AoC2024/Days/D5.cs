@@ -105,7 +105,6 @@ internal class D5
                     {
                         if (pagesRowArray.Contains(pageRule)
                             && !pageRowArraySliceBeforeCurrentValue.Contains(pageRule))
-                            //&& !pageRowArraySliceAfterCurrentValue.Contains(pageRule))
                         {
                             rowValid = false;
                         }
@@ -118,7 +117,6 @@ internal class D5
                     {
                         if (pagesRowArray.Contains(pageRule)
                             && !pageRowArraySliceAfterCurrentValue.Contains(pageRule))
-                            //&& !pageRowArraySliceBeforeCurrentValue.Contains(pageRule))
                         {
                             rowValid = false;
                         }
